@@ -98,7 +98,7 @@
 {\large\textcolor{gray}{Confidential --- Internal Architecture Document}}
 
 \vfill
-{\small February 8, 2026}
+{\small February 9, 2026 (revised)}
 \end{center}
 \end{titlepage}
 
@@ -153,8 +153,8 @@ Four core agents handle all work, expandable to 14 when justified by workload:
 \toprule
 \textbf{Metric} & \textbf{Value} & \textbf{Notes} \\
 \midrule
-Infrastructure services & 5 & MongoDB, LiteLLM, Langfuse+Postgres, Ollama, OpenClaw \\
-RAM usage & 8--10 GB & Out of 64 GB available on dreamteam \\
+Infrastructure containers & 3 & MongoDB, Langfuse, Langfuse-Postgres \\
+RAM usage & 7--8 GB & Out of 64 GB available on dreamteam \\
 Monthly cost (Month 1) & \$800--1,000 & LLM APIs + electricity + hosting \\
 Monthly cost (Month 12) & \$6,500--7,300 & At full operation with 9 products \\
 Revenue target (Month 12) & \$30K--70K & From 8--15 live products \\
@@ -171,7 +171,7 @@ The factory represents a paradigm shift: instead of building one product, we bui
 
 \begin{enumerate}[itemsep=2pt]
     \item \textbf{MongoDB for everything} --- One database replaces 5+ separate systems
-    \item \textbf{Minimal moving parts} --- 5 services, not 12+
+    \item \textbf{Minimal moving parts} --- 3 containers, not 12+
     \item \textbf{Free tiers first} --- Pre-revenue discipline
     \item \textbf{Ship products, not infrastructure} --- If it doesn't help ship this week, it waits
 \end{enumerate}
@@ -206,13 +206,13 @@ The factory represents a paradigm shift: instead of building one product, we bui
 
 % Infrastructure
 \node[box, below=1.5cm of rex, fill=darkgreen!10, draw=darkgreen] (mongo) {MongoDB\\{\scriptsize Everything DB}};
-\node[box, below=1.5cm of scout, fill=darkgreen!10, draw=darkgreen] (litellm) {LiteLLM\\{\scriptsize LLM Gateway}};
+\node[box, below=1.5cm of scout, fill=darkgreen!10, draw=darkgreen] (pisdk) {Pi SDK\\{\scriptsize LLM Routing}};
 \node[box, below=1.5cm of blaze, fill=darkgreen!10, draw=darkgreen] (langfuse) {Langfuse\\{\scriptsize Observability}};
 
 % LLM Providers
-\node[cloud, below left=1.5cm and -0.5cm of litellm] (ollama) {Ollama\\{\scriptsize Local / Free}};
-\node[cloud, below=1.5cm of litellm] (anthropic) {Anthropic\\{\scriptsize Frontier}};
-\node[cloud, below right=1.5cm and -0.5cm of litellm] (google) {Google/Groq\\{\scriptsize Mid / Fast}};
+\node[cloud, below left=1.5cm and -0.5cm of pisdk] (ollama) {Ollama\\{\scriptsize Local / Free}};
+\node[cloud, below=1.5cm of pisdk] (anthropic) {Anthropic\\{\scriptsize Frontier}};
+\node[cloud, below right=1.5cm and -0.5cm of pisdk] (google) {Google/Cerebras\\{\scriptsize Mid / Fast}};
 
 % Deploy targets
 \node[cloud, right=3cm of blaze, fill=darkorange!10, draw=darkorange] (cf) {Cloudflare\\{\scriptsize Products}};
@@ -224,12 +224,12 @@ The factory represents a paradigm shift: instead of building one product, we bui
 \draw[arr] (kev) -- (scout);
 \draw[arr] (kev) -- (blaze);
 \draw[arr] (rex) -- (mongo);
-\draw[arr] (rex) -- (litellm);
-\draw[arr] (scout) -- (litellm);
-\draw[arr] (blaze) -- (litellm);
-\draw[arr] (litellm) -- (ollama);
-\draw[arr] (litellm) -- (anthropic);
-\draw[arr] (litellm) -- (google);
+\draw[arr] (rex) -- (pisdk);
+\draw[arr] (scout) -- (pisdk);
+\draw[arr] (blaze) -- (pisdk);
+\draw[arr] (pisdk) -- (ollama);
+\draw[arr] (pisdk) -- (anthropic);
+\draw[arr] (pisdk) -- (google);
 \draw[arr] (rex) -- (cf);
 \draw[arr] (blaze) -- (vercel);
 
@@ -253,12 +253,12 @@ The factory runs entirely on \textbf{dreamteam} (RTX 3090, 64GB RAM) with produc
 \textbf{Component} & \textbf{RAM} & \textbf{Purpose} \\
 \midrule
 MongoDB 8.0 & 3--4 GB & Task queue, state, memory, metrics, events \\
-LiteLLM Proxy & 1 GB & Multi-provider LLM routing + budgets \\
 Langfuse + Postgres & 2 GB & LLM tracing and observability \\
 Ollama & GPU VRAM & Local model inference (free tokens) \\
 OpenClaw Gateway & 1 GB & Agent runtime (Kev, Rex, Scout, Blaze) \\
+Pi SDK & in-process & LLM routing (runs inside agent processes) \\
 \midrule
-\textbf{Total} & \textbf{8--10 GB} & Leaves 54+ GB for agent processes \\
+\textbf{Total} & \textbf{7--8 GB} & Leaves 55+ GB for agent processes \\
 \bottomrule
 \end{tabular}
 \caption{Infrastructure services and resource allocation}
@@ -295,7 +295,7 @@ MongoDB was chosen as the \emph{single database} for the entire factory, replaci
 \toprule
 \textbf{Was (Original Architecture)} & \textbf{Now (MongoDB)} \\
 \midrule
-PostgreSQL (task queue, LiteLLM) & MongoDB \\
+PostgreSQL (task queue) & MongoDB \\
 SQLite (orchestrator state) & MongoDB \\
 Redis (caching, pub-sub) & MongoDB change streams + in-memory \\
 Qdrant/ChromaDB (vector search) & MongoDB Atlas Vector Search \\
@@ -318,13 +318,16 @@ NATS JetStream (message bus) & MongoDB change streams \\
     \item \textbf{TTL indexes} for automatic cleanup; capped collections for fixed-size event logs
 \end{enumerate}
 
-\section{Pi SDK + LiteLLM --- LLM Orchestration}
+\section{Pi SDK --- Single LLM Layer}
 
-\textbf{Two-layer stack:} Pi SDK decides \emph{what} to run; LiteLLM decides \emph{where} to run it.
+\textbf{One layer, no proxy:} Pi SDK (\texttt{@mariozechner/pi-ai}) handles both LLM execution \emph{and} provider routing directly.
 
 \begin{itemize}[itemsep=3pt]
-    \item \textbf{Pi SDK} handles spawning Claude Code / Codex sessions, parallel execution, context management
-    \item \textbf{LiteLLM} provides unified OpenAI-compatible API across all providers, per-key budgets, fallback chains, cost logging
+    \item \textbf{Multi-provider routing} via \texttt{getModel()} with provider prefixes: \texttt{"anthropic/"}, \texttt{"google/"}, \texttt{"cerebras/"}, and OpenAI-compatible endpoints for local models
+    \item \textbf{Parallel execution} --- spawns Claude Code / Codex sessions
+    \item \textbf{Fallback routing} via simple try/catch in application code
+    \item \textbf{Cost tracking} via Pi SDK's usage reporting, logged to MongoDB
+    \item \textbf{No proxy container needed} --- runs in-process with agents
 \end{itemize}
 
 \section{LLM Provider Strategy --- Cost Pyramid}
@@ -336,7 +339,7 @@ NATS JetStream (message bus) & MongoDB change streams \\
 \textbf{Tier} & \textbf{Provider} & \textbf{Models} & \textbf{Use Case} & \textbf{\% Calls} \\
 \midrule
 Local (free) & Ollama & Llama 3.2 8B, nomic-embed & Embeddings, triage, drafts & 50--60\% \\
-Speed (cheap) & Groq & Llama 3.3 70B & Fast generation, summaries & 15--20\% \\
+Speed (cheap) & Cerebras & Llama 3.3 70B & Fast generation, summaries & 15--20\% \\
 Mid (balanced) & Google & Gemini 2.5 Flash/Pro & Long-context, general coding & 15--20\% \\
 Frontier & Anthropic & Claude Sonnet 4.5 / Opus & Architecture, critical code & 5--10\% \\
 Backup & OpenAI & GPT-5 mini & Fallback & $<$5\% \\
@@ -349,7 +352,7 @@ Backup & OpenAI & GPT-5 mini & Fallback & $<$5\% \\
 
 \section{Langfuse --- LLM Observability}
 
-Self-hosted Langfuse provides per-trace cost tracking, prompt management, and evaluation framework. Native LiteLLM integration via a single config line: \texttt{callbacks: ["langfuse"]}. Requires a minimal Postgres sidecar (\textasciitilde512MB RAM).
+Self-hosted Langfuse provides per-trace cost tracking, prompt management, and evaluation framework. Instrumented via Langfuse's TypeScript SDK as a thin wrapper around Pi SDK calls. Requires a minimal Postgres sidecar (\textasciitilde512MB RAM).
 
 \textbf{Why kept despite simplification review:} One Docker container, 10-minute setup, and building custom cost tracking would take weeks. Cost visibility from day one is non-negotiable at \$30--50/day LLM spend.
 
@@ -454,7 +457,7 @@ The original 14-agent roster (Kev, Rex, Forge, Scout, Hawk, Pixel, Blaze, Echo, 
     \item \textbf{Global daily cap:} \$100 (circuit breaker)
     \item \textbf{Per-agent daily caps:} Kev \$30, Rex \$40, Scout \$15, Blaze \$10
     \item \textbf{Per-provider monthly caps} set in provider dashboards as backup
-    \item LiteLLM logs every call to MongoDB $\rightarrow$ real-time spend queries
+    \item Pi SDK usage logged to MongoDB $\rightarrow$ real-time spend queries
 \end{itemize}
 
 % ============================================================
@@ -815,7 +818,7 @@ Gross margin & --- & 30\% & 78\% \\
 
 \subsection{Cost Blowout (Score: 20)}
 \begin{itemize}[itemsep=2pt]
-    \item Per-task and per-agent budget caps in LiteLLM
+    \item Per-task and per-agent budget caps via MongoDB aggregation queries
     \item Kill switches at global, per-agent, per-provider levels
     \item Cost velocity monitoring: alert if \$/min exceeds 3$\times$ rolling average
     \item Max 20 tool calls per agent run (hard cap)
@@ -1073,11 +1076,9 @@ Message Bus & MongoDB Change Streams & NATS, Redis Streams & One machine; no sep
 \midrule
 Vector Search & MongoDB Atlas Vector Search & Qdrant, ChromaDB & Vectors live with documents; one query for hybrid search \\
 \midrule
-LLM Gateway & LiteLLM & Custom router & 100+ providers, budgets, fallbacks as config \\
+LLM Layer & Pi SDK & LiteLLM, custom router & Direct provider routing via getModel(); no proxy needed \\
 \midrule
-LLM Execution & Pi SDK & Direct CLI & Session management, parallel execution \\
-\midrule
-Observability & Langfuse (self-hosted) & Grafana+Prometheus, custom & Native LiteLLM integration; trace visualization \\
+Observability & Langfuse (self-hosted) & Grafana+Prometheus, custom & Trace visualization; Langfuse SDK integration \\
 \midrule
 Language & TypeScript & Python & Ecosystem alignment; deployment targets; type safety \\
 \midrule
@@ -1108,7 +1109,7 @@ Hosting (factory) & dreamteam (local) & Cloud VMs & Existing hardware; 64GB RAM;
 
 \begin{center}
 \rule{0.5\textwidth}{0.5pt}\\[0.5cm]
-{\small\textcolor{gray}{Document generated February 8, 2026}}\\
+{\small\textcolor{gray}{Document generated February 9, 2026 (revised --- LiteLLM removed, Pi SDK direct routing)}}\\
 {\small\textcolor{gray}{The Factory --- Autonomous Agent Architecture}}\\
 {\small\textcolor{gray}{Prepared by the Kev Agent Team}}
 \end{center}

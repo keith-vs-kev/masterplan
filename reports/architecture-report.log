@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2026.2.5)  8 FEB 2026 10:00
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2026.2.5)  8 FEB 2026 18:30
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -636,18 +636,13 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.39 ...ystem Destroys Isolation}{16}{section.7.2}
+l.39 ...ystem Destroys Isolation}{17}{section.7.2}
                                                   % [1])
 \tf@toc=\write5
 \openout5 = `architecture-report.toc'.
 
  [2]
 Chapter 1.
-
-Overfull \hbox (66.1146pt too wide) in paragraph at lines 152--165
- [][] 
- []
-
 [3
 
 
@@ -681,20 +676,25 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.2.1}) ha
 l.282 \chapter
               {Technology Stack}]
 Chapter 3.
+
+Overfull \hbox (14.4476pt too wide) in paragraph at lines 326--327
+[]\OT1/cmr/bx/n/10.95 Multi-provider rout-ing \OT1/cmr/m/n/10.95 via \OT1/cmtt/m/n/10.95 getModel() \OT1/cmr/m/n/10.95 with provider pre-fixes: \OT1/cmtt/m/n/10.95 "anthropic/"\OT1/cmr/m/n/10.95 , \OT1/cmtt/m/n/10.95 "google/"\OT1/cmr/m/n/10.95 ,
+ []
+
 [7
 
 
 pdfTeX warning (ext4): destination with the same identifier (name{table.3.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.328 \end{itemize}
-                   ]
-Overfull \hbox (41.03905pt too wide) in paragraph at lines 334--345
+l.328     \item \textbf
+                       {Fallback routing} via simple try/catch in applicatio...]
+Overfull \hbox (41.03905pt too wide) in paragraph at lines 337--348
  [][] 
  []
 
 
-Overfull \hbox (21.25061pt too wide) in paragraph at lines 376--387
+Overfull \hbox (21.25061pt too wide) in paragraph at lines 379--390
  [][] 
  []
 
@@ -702,16 +702,16 @@ Overfull \hbox (21.25061pt too wide) in paragraph at lines 376--387
 pdfTeX warning (ext4): destination with the same identifier (name{table.3.2}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.389 
+l.392 
       ] [9
 pdfTeX warning (ext4): destination with the same identifier (name{table.3.3}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.393 \chapter
+l.396 \chapter
               {Agent Design}]
 Chapter 4.
 
-Underfull \hbox (badness 1975) in paragraph at lines 417--417
+Underfull \hbox (badness 1975) in paragraph at lines 420--420
 []|\OT1/cmr/m/n/10.95 Marketing + sales +
  []
 
@@ -721,36 +721,36 @@ Underfull \hbox (badness 1975) in paragraph at lines 417--417
 pdfTeX warning (ext4): destination with the same identifier (name{table.4.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.446     \item W
+l.449     \item W
                  orkload exceeds single-agent throughput for a role
 pdfTeX warning (ext4): destination with the same identifier (name{table.4.2}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.446     \item W
+l.449     \item W
                  orkload exceeds single-agent throughput for a role] [11]
 Chapter 5.
 (/home/adam/.TinyTeX/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2025/11/14 1.11b listings language file
 )
-Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on input line 469.
+Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on input line 472.
 LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <10> not available
-(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 470.
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 473.
  [12
 
 ]
 LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <14.4> not available
-(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 552.
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 555.
 
 
 LaTeX Font Warning: Font shape `TS1/cmtt/bx/n' undefined
 (Font)              using `TS1/cmtt/m/n' instead
-(Font)              for symbol `textdollar' on input line 552.
+(Font)              for symbol `textdollar' on input line 555.
 
 [13] [14
 pdfTeX warning (ext4): destination with the same identifier (name{table.5.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.594 \chapter
+l.597 \chapter
               {Data Flows}]
 Chapter 6.
 [15
@@ -759,16 +759,16 @@ Chapter 6.
 pdfTeX warning (ext4): destination with the same identifier (name{table.6.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.644     \item \textbf
+l.647     \item \textbf
                        {Rollback (T+60s):} Auto-rollback is always authorise...] [16]
 Chapter 7.
 
-Overfull \hbox (33.66203pt too wide) in paragraph at lines 663--664
+Overfull \hbox (33.66203pt too wide) in paragraph at lines 666--667
 []\OT1/cmr/m/n/10.95 The ar-chi-tec-ture de-scribes per-agent sand-boxes. Re-al-ity: all agents share \OT1/cmtt/m/n/10.95 /home/adam/agents/shared/
  []
 
 
-Underfull \hbox (badness 3701) in paragraph at lines 704--704
+Underfull \hbox (badness 3701) in paragraph at lines 707--707
 []|\OT1/cmr/m/n/10 Human re-view manda-tory for
  []
 
@@ -778,7 +778,7 @@ Underfull \hbox (badness 3701) in paragraph at lines 704--704
 pdfTeX warning (ext4): destination with the same identifier (name{table.7.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.732 \chapter
+l.735 \chapter
               {Cost Analysis}]
 Chapter 8.
 [19
@@ -787,12 +787,12 @@ Chapter 8.
 pdfTeX warning (ext4): destination with the same identifier (name{table.8.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.782     \item \textbf
+l.785     \item \textbf
                        {Extended thinking burns invisible tokens:} 7 agents ...
 pdfTeX warning (ext4): destination with the same identifier (name{table.8.2}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.782     \item \textbf
+l.785     \item \textbf
                        {Extended thinking burns invisible tokens:} 7 agents ...] [20]
 Chapter 9.
 [21
@@ -801,11 +801,11 @@ Chapter 9.
 pdfTeX warning (ext4): destination with the same identifier (name{table.9.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.837     \item C
+l.840     \item C
                  loud fallback agents for critical functions] [22]
 Chapter 10.
 
-Overfull \hbox (48.116pt too wide) in paragraph at lines 863--863
+Overfull \hbox (48.116pt too wide) in paragraph at lines 866--866
 []|\OT1/cmr/m/n/10.95 Closed-loop observe$\OMS/cmsy/m/n/10.95 !$\OT1/cmr/m/n/10.95 measure$\OMS/cmsy/m/n/10.95 !$\OT1/cmr/m/n/10.95 diagnose$\OMS/cmsy/m/n/10.95 !$\OT1/cmr/m/n/10.95 patch$\OMS/cmsy/m/n/10.95 !$\OT1/cmr/m/n/10.95 verify| 
  []
 
@@ -815,7 +815,7 @@ Overfull \hbox (48.116pt too wide) in paragraph at lines 863--863
 pdfTeX warning (ext4): destination with the same identifier (name{table.10.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.912 \chapter
+l.915 \chapter
               {Implementation Roadmap}]
 Chapter 11.
 [25
@@ -824,17 +824,17 @@ Chapter 11.
 pdfTeX warning (ext4): destination with the same identifier (name{table.11.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.976 
+l.979 
       
 pdfTeX warning (ext4): destination with the same identifier (name{table.11.2}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.976 
+l.979 
       ] [26
 pdfTeX warning (ext4): destination with the same identifier (name{table.11.3}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.980 \chapter
+l.983 \chapter
               {First Product: CronPilot}]
 Chapter 12.
 [27
@@ -843,114 +843,109 @@ Chapter 12.
 pdfTeX warning (ext4): destination with the same identifier (name{table.12.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1043 
+l.1046 
        
 pdfTeX warning (ext4): destination with the same identifier (name{table.12.2}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1043 
+l.1046 
        ] [28
 pdfTeX warning (ext4): destination with the same identifier (name{table.12.3}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1058 \chapter
+l.1061 \chapter
                *{Appendix: Full Tech Stack Decision Table}]
-Underfull \hbox (badness 10000) in paragraph at lines 1070--1070
+Underfull \hbox (badness 10000) in paragraph at lines 1073--1073
 []|\OT1/cmr/m/n/10.95 PostgreSQL,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1072--1072
+Underfull \hbox (badness 10000) in paragraph at lines 1075--1075
 []|\OT1/cmr/m/n/10.95 MongoDB Change
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1072--1072
+Underfull \hbox (badness 10000) in paragraph at lines 1075--1075
 []|\OT1/cmr/m/n/10.95 NATS, Re-dis
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1074--1074
+Underfull \hbox (badness 10000) in paragraph at lines 1077--1077
 []|\OT1/cmr/m/n/10.95 Qdrant, Chro-
  []
 
 
-Underfull \hbox (badness 2961) in paragraph at lines 1076--1077
-[]|\OT1/cmr/m/n/10.95 100+ providers, bud-
+Underfull \hbox (badness 5008) in paragraph at lines 1079--1080
+[]|\OT1/cmr/m/n/10.95 Direct provider rout-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1078--1079
-[]|\OT1/cmr/m/n/10.95 Session man-age-ment,
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1080--1080
+Underfull \hbox (badness 10000) in paragraph at lines 1081--1081
 []|\OT1/cmr/m/n/10.95 Langfuse (self-
  []
 
 
-Overfull \hbox (21.7542pt too wide) in paragraph at lines 1080--1080
+Overfull \hbox (21.7542pt too wide) in paragraph at lines 1081--1081
 []|\OT1/cmr/m/n/10.95 Grafana+Prometheus,
  []
 
 
-Underfull \hbox (badness 2626) in paragraph at lines 1080--1081
-[]|\OT1/cmr/m/n/10.95 Native LiteLLM in-te-
+Underfull \hbox (badness 10000) in paragraph at lines 1081--1082
+[]|\OT1/cmr/m/n/10.95 Trace vi-su-al-iza-tion;
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1082--1083
+Underfull \hbox (badness 10000) in paragraph at lines 1083--1084
 []|\OT1/cmr/m/n/10.95 Ecosystem align-ment;
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1082--1083
+Underfull \hbox (badness 10000) in paragraph at lines 1083--1084
 \OT1/cmr/m/n/10.95 de-ploy-ment tar-gets;
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1084--1084
+Underfull \hbox (badness 10000) in paragraph at lines 1085--1085
 []|\OT1/cmr/m/n/10.95 AWS, GCP,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1088--1088
+Underfull \hbox (badness 10000) in paragraph at lines 1089--1089
 []|\OT1/cmr/m/n/10.95 Supabase Auth,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1090--1090
+Underfull \hbox (badness 10000) in paragraph at lines 1091--1091
 []|\OT1/cmr/m/n/10.95 Paddle, Lemon-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1092--1092
+Underfull \hbox (badness 10000) in paragraph at lines 1093--1093
 []|\OT1/cmr/m/n/10.95 MongoDB
  []
 
 
-Underfull \hbox (badness 3417) in paragraph at lines 1092--1093
+Underfull \hbox (badness 3417) in paragraph at lines 1093--1094
 []|\OT1/cmr/m/n/10.95 Zero ad-di-tional in-fra;
  []
 
 
-Underfull \hbox (badness 1072) in paragraph at lines 1094--1095
+Underfull \hbox (badness 1072) in paragraph at lines 1095--1096
 []|\OT1/cmr/m/n/10.95 Free; agents know it;
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1096--1096
+Underfull \hbox (badness 10000) in paragraph at lines 1097--1097
 []|\OT1/cmr/m/n/10.95 Environment vari-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1100--1101
+Underfull \hbox (badness 10000) in paragraph at lines 1101--1102
 []|\OT1/cmr/m/n/10.95 Simpler man-age-ment;
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1102--1103
+Underfull \hbox (badness 10000) in paragraph at lines 1103--1104
 []|\OT1/cmr/m/n/10.95 Existing hard-ware;
  []
 
@@ -966,18 +961,18 @@ L3 programming layer <2026-01-19>
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 Package rerunfilecheck Info: File `architecture-report.out' has not changed.
-(rerunfilecheck)             Checksum: C59ED62FD8A2139A091921B4D5997DEE;12162.
+(rerunfilecheck)             Checksum: 1CC1F6308EC5603DA63BCD6B651490BC;12104.
  ) 
 Here is how much of TeX's memory you used:
  23996 strings out of 469514
- 443000 string characters out of 5469759
- 1183180 words of memory out of 5000000
+ 442986 string characters out of 5469759
+ 1183174 words of memory out of 5000000
  52061 multiletter control sequences out of 15000+600000
  638124 words of font info for 75 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  84i,13n,94p,1208b,2022s stack positions out of 10000i,1000n,20000p,200000b,200000s
  </home/adam/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tcbx1095.600pk> </home/adam/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tcbx1000.600pk> </home/adam/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1000.600pk> </home/adam/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tctt1440.600pk> </home/adam/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tctt1000.600pk> </home/adam/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1095.600pk> </home/adam/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tctt1095.600pk></home/adam/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></home/adam/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></home/adam/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb></home/adam/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></home/adam/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></home/adam/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></home/adam/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></home/adam/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></home/adam/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></home/adam/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></home/adam/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></home/adam/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></home/adam/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
-Output written on architecture-report.pdf (31 pages, 258894 bytes).
+Output written on architecture-report.pdf (31 pages, 259626 bytes).
 PDF statistics:
  768 PDF objects out of 1000 (max. 8388607)
  694 compressed objects within 7 object streams

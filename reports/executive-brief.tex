@@ -58,7 +58,7 @@ An \textbf{autonomous AI factory} that discovers market opportunities, builds so
 Monthly cost (Month 1) & \$800--1,000 & LLM APIs + electricity + hosting \\
 Monthly cost (Month 12) & \$6,500--7,300 & At full operation \\
 Break-even & Month 5--7 & Conservative estimate \\
-Infrastructure services & 5 & On a single 64GB RAM server \\
+Docker containers & 3 & MongoDB + Langfuse + Postgres sidecar \\
 Cost per product built & \$40--70 & Full cycle: research to deployment \\
 Time to build a product & 15--25 min & Agent time (excl. human approval) \\
 \bottomrule
@@ -83,21 +83,21 @@ Time to build a product & 15--25 min & Agent time (excl. human approval) \\
 \node[box, right=1.2cm of kev, yshift=-0.7cm] (blaze) {Blaze (Growth)};
 
 \node[box, right=1cm of rex, fill=darkgreen!10, draw=darkgreen] (mongo) {MongoDB};
-\node[box, right=1cm of scout, fill=darkgreen!10, draw=darkgreen] (litellm) {LiteLLM};
+\node[box, right=1cm of scout, fill=darkgreen!10, draw=darkgreen] (pisdk) {Pi SDK};
 \node[box, right=1cm of blaze, fill=darkgreen!10, draw=darkgreen] (langfuse) {Langfuse};
 
-\node[cloud, right=0.8cm of litellm, yshift=0.5cm] (local) {Ollama (free)};
-\node[cloud, right=0.8cm of litellm, yshift=-0.5cm] (cloud) {Claude/Gemini};
+\node[cloud, right=0.8cm of pisdk, yshift=0.5cm] (local) {Ollama (free)};
+\node[cloud, right=0.8cm of pisdk, yshift=-0.5cm] (cloud) {Claude/Gemini};
 
 \draw[arr] (adam) -- (kev);
 \draw[arr] (kev) -- (rex);
 \draw[arr] (kev) -- (scout);
 \draw[arr] (kev) -- (blaze);
 \draw[arr] (rex) -- (mongo);
-\draw[arr] (scout) -- (litellm);
+\draw[arr] (scout) -- (pisdk);
 \draw[arr] (blaze) -- (langfuse);
-\draw[arr] (litellm) -- (local);
-\draw[arr] (litellm) -- (cloud);
+\draw[arr] (pisdk) -- (local);
+\draw[arr] (pisdk) -- (cloud);
 
 \end{tikzpicture}
 \end{center}
@@ -126,9 +126,8 @@ Time to build a product & 15--25 min & Agent time (excl. human approval) \\
 \textbf{Component} & \textbf{Choice} & \textbf{Why} \\
 \midrule
 Database & MongoDB & Replaces 7 systems: task queue, vector search, metrics, events, graph, cache, message bus \\
-LLM Gateway & LiteLLM & 100+ providers, per-key budgets, fallback chains, cost logging \\
-LLM Execution & Pi SDK & Spawns parallel Claude Code/Codex sessions \\
-Observability & Langfuse & Per-trace cost tracking; native LiteLLM integration \\
+LLM Layer & Pi SDK & Direct provider routing + parallel execution; no proxy needed \\
+Observability & Langfuse & Per-trace cost tracking; Langfuse SDK integration \\
 Language & TypeScript & Ecosystem alignment; products + factory in one language \\
 Products Deploy & Cloudflare & 100K req/day free; zero cold starts; global edge \\
 Auth / Payments & Clerk + Stripe & Free tiers; industry standard; agent-friendly \\
@@ -194,7 +193,7 @@ No product-market fit & 15 & Validation before building, fast kill decisions, po
 \vfill
 \begin{center}
 \rule{0.5\textwidth}{0.4pt}\\[0.3cm]
-{\small\textcolor{gray}{The Factory --- Executive Brief --- February 8, 2026}}
+{\small\textcolor{gray}{The Factory --- Executive Brief --- February 9, 2026 (revised)}}
 \end{center}
 
 \end{document}

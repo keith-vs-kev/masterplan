@@ -1,6 +1,6 @@
 # 00 — Final Technology Stack Decisions
 
-> **Date:** 2026-02-08  
+> **Date:** 2026-02-09 (revised)  
 > **Author:** Atlas (Strategy Agent)  
 > **Status:** FINAL — These are the decisions. Stop debating, start building.
 
@@ -33,7 +33,7 @@
 **What MongoDB replaces:**
 | Was | Now |
 |-----|-----|
-| PostgreSQL (task queue, LiteLLM backing) | MongoDB |
+| PostgreSQL (task queue) | MongoDB |
 | SQLite (orchestrator state) | MongoDB |
 | Redis (caching, counters, pub-sub) | MongoDB (change streams + in-memory caching) |
 | Qdrant/ChromaDB (vector search) | MongoDB Atlas Vector Search |
@@ -134,60 +134,72 @@ changeStream.on("change", (event) => {
 
 ---
 
-### 4. LLM Gateway: Pi SDK + LiteLLM ✅
+### 4. LLM Layer: Pi SDK ✅ (No proxy, no middleware)
 
-**Choice:** **Pi SDK (@mariozechner/pi-ai)** as the primary LLM orchestration layer. **LiteLLM** as the multi-provider proxy underneath.
+**Choice:** **Pi SDK (@mariozechner/pi-ai)** as the single LLM layer. No LiteLLM. No proxy. No middleware.
 
 **Rationale:**
-- Pi SDK is already chosen for agent execution. It handles spawning Claude Code / Codex sessions, parallel execution, context management. This is the execution muscle.
-- LiteLLM sits underneath as the unified API proxy: all providers behind one OpenAI-compatible endpoint, per-key budgets, fallback chains, cost logging.
-- Together they form the two-layer stack: Pi SDK (what to run) → LiteLLM (where to run it).
+- Pi SDK already supports multiple providers natively via `getModel()` with provider prefixes: `"cerebras/"`, `"anthropic/"`, `"google/"`, and any OpenAI-compatible endpoint (local llama.cpp, Ollama, Groq).
+- **No proxy layer needed on a single machine.** LiteLLM adds a container, a config file, a port, and a point of failure — all to solve a problem Pi SDK already solves in-process.
+- **Fallback routing** is trivial in application code: try provider A, catch error, try provider B. A few lines of TypeScript vs. an entire proxy container.
+- **Cost tracking** via Pi SDK's built-in usage reporting — token counts, model used, cost per call. Log to MongoDB's `factory.llm_calls` time-series collection.
+- **One less container, one less config, one less thing that breaks at 3am.**
 
-**LiteLLM configuration:**
-```yaml
-model_list:
-  # Frontier - complex reasoning, architecture, critical code
-  - model_name: frontier
-    litellm_params:
-      model: anthropic/claude-sonnet-4-5-20250514
-      api_key: os.environ/ANTHROPIC_API_KEY
-    model_info:
-      max_budget: 50.00  # daily
+**Provider routing in Pi SDK:**
+```typescript
+import { getModel } from "@mariozechner/pi-ai";
 
-  # Mid-tier - general coding, content, analysis  
-  - model_name: mid
-    litellm_params:
-      model: gemini/gemini-2.5-flash
-      api_key: os.environ/GOOGLE_API_KEY
+// Direct provider access — no proxy needed
+const frontier = getModel("anthropic/claude-sonnet-4-5-20250514");
+const mid = getModel("google/gemini-2.5-flash");
+const fast = getModel("cerebras/llama-3.3-70b");
+const local = getModel("openai-compatible/llama3.2", {
+  baseUrl: "http://localhost:11434/v1"  // Ollama
+});
+```
 
-  # Cheap - triage, classification, simple generation
-  - model_name: cheap
-    litellm_params:
-      model: groq/llama-3.3-70b-versatile
-      api_key: os.environ/GROQ_API_KEY
-
-  # Local - embeddings, simple tasks, zero cost
-  - model_name: local
-    litellm_params:
-      model: ollama/llama3.2
-      api_base: http://localhost:11434
-
-  # Embeddings - always local
-  - model_name: embed
-    litellm_params:
-      model: ollama/nomic-embed-text
-      api_base: http://localhost:11434
-
-general_settings:
-  database_url: mongodb://localhost:27017/litellm  # MongoDB backing store
-  master_key: os.environ/LITELLM_MASTER_KEY
+**Fallback routing in application code:**
+```typescript
+async function callWithFallback(prompt: string, tiers: string[]) {
+  for (const modelId of tiers) {
+    try {
+      const model = getModel(modelId);
+      const result = await model.complete(prompt);
+      // Log usage to MongoDB
+      await db.collection("llm_calls").insertOne({
+        timestamp: new Date(),
+        model: modelId,
+        tokens: result.usage,
+        cost: calculateCost(modelId, result.usage),
+      });
+      return result;
+    } catch (err) {
+      console.warn(`${modelId} failed, trying next...`);
+    }
+  }
+  throw new Error("All providers failed");
+}
 ```
 
 **Budget enforcement:**
-- Global daily cap: $100 (circuit breaker)
-- Per-agent daily caps: Kev $30, Rex $40, Scout $15, Blaze $10
-- Per-provider monthly caps set in provider dashboards as backup
-- LiteLLM logs every call to MongoDB → query for real-time spend
+```typescript
+// Application-level budget checks — no proxy needed
+async function checkBudget(agent: string): Promise<boolean> {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const spent = await db.collection("llm_calls").aggregate([
+    { $match: { agent, timestamp: { $gte: today } } },
+    { $group: { _id: null, total: { $sum: "$cost" } } }
+  ]).toArray();
+  return (spent[0]?.total ?? 0) < AGENT_BUDGETS[agent];
+}
+```
+
+**What this replaces:**
+- ~~LiteLLM proxy container~~ → Pi SDK `getModel()` calls
+- ~~LiteLLM config YAML~~ → Provider prefixes in code
+- ~~LiteLLM budget system~~ → MongoDB aggregation queries
+- ~~LiteLLM fallback chains~~ → try/catch in TypeScript
+- ~~LiteLLM cost logging~~ → Pi SDK usage + MongoDB writes
 
 ---
 
@@ -196,11 +208,12 @@ general_settings:
 | Tier | Provider | Models | Use Case | Est. % of Calls |
 |------|----------|--------|----------|-----------------|
 | **Local (free)** | Ollama / llama.cpp | Llama 3.2 8B, nomic-embed-text | Embeddings, classification, triage, drafts | 50-60% |
-| **Speed (cheap)** | Groq | Llama 3.3 70B | Fast generation, research summaries | 15-20% |
+| **Speed (cheap)** | Cerebras | Llama 3.3 70B | Fast generation, research summaries | 15-20% |
 | **Mid (balanced)** | Google | Gemini 2.5 Flash / Pro | Long-context analysis, content, general coding | 15-20% |
 | **Frontier (expensive)** | Anthropic | Claude Sonnet 4.5 / Opus 4.6 | Complex architecture, critical code, agent reasoning | 5-10% |
 | **Backup** | OpenAI | GPT-5 mini | Fallback when Anthropic is down | <5% |
-| **Free research** | Cerebras | Llama 3.3 70B | Market research, validation (free tier) | As available |
+
+All accessed directly via Pi SDK's `getModel()`. No proxy layer between the application and the providers.
 
 **Cost pyramid target:** 60% free/local, 25% cheap/mid, 15% frontier = ~$30-50/day at full operation.
 
@@ -217,7 +230,7 @@ general_settings:
 
 **Why Langfuse stays (despite the simplification review saying cut it):**
 - It's ONE Docker container. The setup cost is 10 minutes.
-- Native LiteLLM integration — literally `callbacks: ["langfuse"]` in config.
+- Pi SDK calls can be instrumented to send traces to Langfuse via its SDK — a few lines of wrapper code.
 - Per-trace cost tracking, prompt management, eval framework — building this custom would take weeks.
 - We need cost visibility from day one. This is non-negotiable when you're burning $30-50/day on LLM calls.
 
@@ -228,7 +241,7 @@ general_settings:
 
 **Langfuse backing store:** Langfuse needs Postgres (it doesn't support MongoDB natively). Run a minimal Postgres instance ONLY for Langfuse. 512MB RAM, no other use.
 
-**Alternative if Postgres-for-Langfuse feels wrong:** Use LiteLLM's built-in spend tracking (writes to MongoDB) + custom dashboard. Lose Langfuse's trace visualization but gain zero-Postgres purity. **Decision: Keep Langfuse. The trace visualization is worth a tiny Postgres sidecar.**
+**Alternative if Postgres-for-Langfuse feels wrong:** Use Pi SDK's usage reporting + custom MongoDB dashboard. Lose Langfuse's trace visualization but gain zero-Postgres purity. **Decision: Keep Langfuse. The trace visualization is worth a tiny Postgres sidecar.**
 
 **System monitoring:**
 ```javascript
@@ -252,7 +265,7 @@ Simple cron job collects CPU/RAM/GPU/disk every minute → writes to MongoDB. Qu
 **Choice:** TypeScript for everything. Node.js runtime.
 
 **Rationale:**
-- Pi SDK is TypeScript. OpenClaw is Node.js. LiteLLM client libs work with any HTTP client. The ecosystem is already TypeScript.
+- Pi SDK is TypeScript. OpenClaw is Node.js. The ecosystem is already TypeScript.
 - Every product the factory builds will likely be TypeScript (Next.js, Cloudflare Workers, etc.). One language for the factory AND the products it builds.
 - MongoDB's Node.js driver is best-in-class. Mongoose for schema validation if wanted, but native driver is fine.
 - Claude Code and Codex both excel at TypeScript generation.
@@ -263,7 +276,7 @@ Simple cron job collects CPU/RAM/GPU/disk every minute → writes to MongoDB. Qu
 ```json
 {
   "mongodb": "^7.0",           // Native MongoDB driver
-  "@mariozechner/pi-ai": "*",  // Pi SDK for LLM orchestration
+  "@mariozechner/pi-ai": "*",  // Pi SDK — LLM orchestration AND provider routing
   "zod": "^3.23",              // Runtime validation
   "tsx": "^4.0",               // TypeScript execution
   "vitest": "^3.0",            // Testing
@@ -367,13 +380,15 @@ jobs:
 │                                                           │
 │  Docker Compose:                                          │
 │  ├── mongodb:8.0          (3-4 GB RAM)                    │
-│  ├── litellm-proxy        (1 GB RAM)                      │
 │  ├── langfuse + postgres  (2 GB RAM total)                │
-│  ├── ollama               (GPU: 8-16 GB VRAM)             │
-│  └── openclaw-gateway     (1 GB RAM)                      │
+│  └── ollama               (GPU: 8-16 GB VRAM)             │
 │                                                           │
-│  Total: ~8-10 GB RAM + GPU                                │
-│  Leaves: ~50+ GB for agents and OS                        │
+│  Native processes:                                        │
+│  ├── openclaw-gateway     (1 GB RAM)                      │
+│  └── Pi SDK agents        (in-process LLM routing)        │
+│                                                           │
+│  Total: ~7-8 GB RAM + GPU                                 │
+│  Leaves: ~55+ GB for agents and OS                        │
 │                                                           │
 └───────────────────────────────────────────────────────────┘
          │
@@ -386,18 +401,19 @@ jobs:
 └──────────────────────────────────────┘
 ```
 
-**RAM budget (dramatically lower than the 27GB monster in the original architecture):**
+**RAM budget:**
 
 | Service | RAM | Notes |
 |---------|-----|-------|
 | MongoDB | 3-4 GB | WiredTiger cache, scales with data |
-| LiteLLM | 1 GB | Proxy process |
 | Langfuse + Postgres | 2 GB | Langfuse web + tiny Postgres |
 | Ollama | GPU VRAM (8-16 GB) | Models loaded on demand |
 | OpenClaw Gateway | 1 GB | Agent runtime |
-| **Total** | **~8-10 GB** | vs 27GB in the original plan |
+| **Total** | **~7-8 GB** | vs 8-10 GB with LiteLLM |
 
-That's 54+ GB free for agent processes on a 64GB machine. No second server needed for months.
+That's 55+ GB free for agent processes on a 64GB machine. No second server needed for months.
+
+**Docker containers on dreamteam: 3** (MongoDB, Langfuse, Langfuse-Postgres). Ollama runs natively for GPU access. OpenClaw runs natively. Pi SDK routes LLM calls directly from agent processes — no proxy container needed.
 
 ---
 
@@ -470,12 +486,13 @@ Expand to specialist agents ONLY when context windows consistently max out or ta
 
 | Rejected | Why |
 |----------|-----|
-| PostgreSQL | MongoDB handles everything Postgres would |
+| PostgreSQL | MongoDB handles everything Postgres would (Langfuse's tiny sidecar is the sole exception) |
 | SQLite | Same — MongoDB is the single database |
 | Redis | MongoDB change streams replace pub-sub; in-process caching replaces Redis cache |
 | NATS / RabbitMQ | Change streams. One machine. No message bus needed. |
 | Qdrant / ChromaDB | Atlas Vector Search. Vectors live with documents. |
 | Neo4j / Memgraph | `$graphLookup` covers 90%. Add if proven insufficient. |
+| LiteLLM | Pi SDK routes directly to providers. No proxy needed on a single machine. |
 | Grafana / Prometheus | MongoDB time-series + Langfuse. Custom dashboard if needed. |
 | TimescaleDB | MongoDB time-series collections. |
 | HashiCorp Vault | `.env` files. |
@@ -510,16 +527,6 @@ services:
       mongosh --host mongodb --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"mongodb:27017"}]})'
     restart: "no"
 
-  litellm:
-    image: ghcr.io/berriai/litellm:main-latest
-    ports: ["4000:4000"]
-    volumes: ["./litellm-config.yaml:/app/config.yaml"]
-    environment:
-      - DATABASE_URL=mongodb://mongodb:27017/litellm
-      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
-    depends_on: [mongodb]
-    restart: unless-stopped
-
   langfuse-db:
     image: postgres:16-alpine
     environment:
@@ -539,22 +546,12 @@ services:
     depends_on: [langfuse-db]
     restart: unless-stopped
 
-  ollama:
-    image: ollama/ollama
-    ports: ["11434:11434"]
-    volumes: ["ollama_data:/root/.ollama"]
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
-    restart: unless-stopped
-
 volumes:
   mongo_data:
   langfuse_pg:
-  ollama_data:
 ```
+
+**3 containers** (MongoDB, Langfuse, Langfuse-Postgres) + the init helper. Ollama and OpenClaw run natively. Pi SDK runs in-process with the agents — no container needed.
 
 **Note:** MongoDB requires a replica set (even single-node) for change streams. The `mongo-init-replica` service handles this on first boot.
 
@@ -585,7 +582,7 @@ volumes:
 | Stripe fees | $0 | $250 | $1,280 |
 | **Total** | **~$800-1,000** | **~$3,000-3,500** | **~$6,500-7,300** |
 
-Infrastructure cost is LOWER than the original architecture because we're running 5 containers instead of 12+. The RAM freed up means no second server until much later (if ever).
+Infrastructure cost is LOWER than ever — 3 containers instead of 5. The RAM freed up means no second server until much later (if ever).
 
 ---
 
@@ -600,15 +597,12 @@ MongoDB ──── one database for everything
   ├── Event bus (change streams, not NATS)
   └── Knowledge graph ($graphLookup)
 
-LiteLLM ──── one gateway for all LLM providers
-  ├── Ollama (local, free)
-  ├── Groq (fast, cheap)
-  ├── Google Gemini (mid-tier, long context)
-  ├── Anthropic Claude (frontier)
-  └── OpenAI (fallback)
-
-Pi SDK ──── execution engine for agents
-  └── Spawns Claude Code / Codex sessions
+Pi SDK ──── single LLM layer (routing + execution)
+  ├── getModel("openai-compatible/...") → Ollama (local, free)
+  ├── getModel("cerebras/...")          → Cerebras (fast, free tier)
+  ├── getModel("google/...")            → Google Gemini (mid-tier)
+  ├── getModel("anthropic/...")         → Anthropic Claude (frontier)
+  └── Application-level fallback routing via try/catch
 
 Langfuse ──── LLM observability (+ tiny Postgres sidecar)
 
@@ -621,13 +615,13 @@ GitHub Actions ──── CI for products
 Clerk + Stripe ──── auth + payments for products
 ```
 
-**Total services on dreamteam: 5** (MongoDB, LiteLLM, Langfuse+Postgres, Ollama, OpenClaw)  
-**Total RAM: ~8-10 GB** out of 64 GB available  
+**Total Docker containers on dreamteam: 3** (MongoDB, Langfuse, Langfuse-Postgres)  
+**Total RAM: ~7-8 GB** out of 64 GB available  
 **Total agents: 4** (expandable to 14 when justified)  
 
 This is the stack. Build on it.
 
 ---
 
-*Final decisions by Atlas — 2026-02-08*
+*Final decisions by Atlas — 2026-02-08, revised 2026-02-09 (removed LiteLLM — Pi SDK handles all LLM routing directly)*
 *Supersedes: architecture/review/08-tech-stack-decisions.md*

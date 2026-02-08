@@ -11,7 +11,7 @@
 \contentsline {section}{\numberline {3.1}MongoDB --- The Universal Database}{7}{section.3.1}%
 \contentsline {subsection}{\numberline {3.1.1}What MongoDB Replaces}{7}{subsection.3.1.1}%
 \contentsline {subsection}{\numberline {3.1.2}Decision Rationale}{7}{subsection.3.1.2}%
-\contentsline {section}{\numberline {3.2}Pi SDK + LiteLLM --- LLM Orchestration}{7}{section.3.2}%
+\contentsline {section}{\numberline {3.2}Pi SDK --- Single LLM Layer}{7}{section.3.2}%
 \contentsline {section}{\numberline {3.3}LLM Provider Strategy --- Cost Pyramid}{8}{section.3.3}%
 \contentsline {section}{\numberline {3.4}Langfuse --- LLM Observability}{8}{section.3.4}%
 \contentsline {section}{\numberline {3.5}TypeScript + Node.js}{8}{section.3.5}%
